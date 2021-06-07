@@ -22,4 +22,4 @@ Hardware Required:
 7.	If you want to disable mouse cursor, install unclutter with “sudo apt-get install unclutter” and add “@unclutter -idle 0” to the same autostart file as above.
 8.	Copy the argon file from github to Argon webIDE – may need to delete the include statements and import the libraries manually and flash.
 
-Let me know if I missed anything!
+Let me know if I missed anything, or if you want the full report with wiring diagram etc.
