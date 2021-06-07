@@ -1,0 +1,75 @@
+// This #include statement was automatically added by the Particle IDE.
+#include <MQTT.h>
+
+// This #include statement was automatically added by the Particle IDE.
+#include <Adafruit_DHT.h>
+
+#define DHTPIN D6
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+double temp;
+int led = D7;
+int relay = D5;
+int extled = D4;
+String data;
+byte server[] = { 192,168,1,150 };
+MQTT client(server, 1883, callback);
+
+void callback(char* topic, byte* payload, unsigned int length){
+    char p[length + 1];
+    memcpy(p, payload, length);
+    p[length] = NULL;
+    String message(p);
+    if (message.equals("On")){
+        digitalWrite(extled, HIGH);
+        digitalWrite(relay, HIGH);
+    }
+    else if (message.equals("Off")){
+        digitalWrite(relay, LOW);
+        digitalWrite(extled, LOW);
+    }
+}
+
+void connect(){
+    client.connect(System.deviceID(), NULL, NULL, "tempstatus", MQTT::QOS0, 0, "dc", true);
+    if (client.isConnected()){
+        client.subscribe("heattoggle");
+    }
+    else{
+        digitalWrite(extled, LOW);
+        delay(5000);
+        while(!client.isConnected()){
+            connect();
+        }
+    }
+}
+
+void setup() {
+    pinMode(extled, OUTPUT);
+    pinMode(led, OUTPUT);
+    pinMode(relay, OUTPUT);
+    dht.begin();
+}
+
+void loop() {
+    temp = dht.getTempCelcius();
+    data = String::format("\%f", temp);
+    if (client.isConnected()){
+        client.loop();
+        client.publish("temp", data);
+        if(digitalRead(extled)==HIGH){
+            client.publish("tempstatus", "HeatOn");    
+        }
+        else{
+            client.publish("tempstatus", "HeatOff");
+        }
+        delay(100);
+    }
+    else if(!client.isConnected()){
+        digitalWrite(extled, LOW);
+        connect();
+    }
+
+        
+}
